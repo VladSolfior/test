@@ -44,7 +44,6 @@ public class ServiceImpl implements Service {
 
                 while (storedMessage != null) {
                     publish(ORDERED_TOPIC, storedMessage);
-                    acknowledge(message);
                     updatedId = dao.incrementProcessingId(processingId);
                     storedMessage = dao.getMessageByProcessingId(updatedId);
                 }
