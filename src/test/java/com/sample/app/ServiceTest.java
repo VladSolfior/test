@@ -11,6 +11,7 @@ import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import com.sample.app.broker.Message;
 import com.sample.app.broker.MessageBroker;
@@ -58,8 +59,8 @@ public class ServiceTest {
     public void testServiceProcessMessageWritingToDatabase() throws IOException {
         // given
         Message sampleMessage = buildSampleMessage(0);
-        Mockito.when(messageBroker.poll(Mockito.anyString(), eq(SAMPLE_DURATION))).thenReturn(sampleMessage);
-        Mockito.when(dao.getProcessingId()).thenReturn((short)1);
+        when(messageBroker.poll(Mockito.anyString(), eq(SAMPLE_DURATION))).thenReturn(sampleMessage);
+        when(dao.getProcessingId()).thenReturn((short)1);
         // when
         service.processMessage();
         //then
@@ -73,10 +74,10 @@ public class ServiceTest {
     public void testServiceProcessMessagePublishingToTopic() throws IOException {
         //given
         Message sampleMessage = buildSampleMessage(VALID_TO_SEND_INDEX);
-        Mockito.when(messageBroker.poll(Mockito.anyString(), eq(SAMPLE_DURATION))).thenReturn(sampleMessage);
-        Mockito.when(dao.getProcessingId()).thenReturn((short)VALID_TO_SEND_INDEX);
+        when(messageBroker.poll(Mockito.anyString(), eq(SAMPLE_DURATION))).thenReturn(sampleMessage);
+        when(dao.getProcessingId()).thenReturn((short)VALID_TO_SEND_INDEX);
         short nextDeliveryId = VALID_TO_SEND_INDEX + 1;
-        Mockito.when(dao.incrementProcessingId(anyShort())).thenReturn(nextDeliveryId);
+        when(dao.incrementProcessingId(anyShort())).thenReturn(nextDeliveryId);
         //when
         service.processMessage();
         //then
@@ -97,12 +98,12 @@ public class ServiceTest {
         short storedId = VALID_TO_SEND_INDEX + 1;
         Message storedMessage = buildSampleMessage(storedId);
 
-        Mockito.when(messageBroker.poll(Mockito.anyString(), eq(SAMPLE_DURATION)))
+        when(messageBroker.poll(Mockito.anyString(), eq(SAMPLE_DURATION)))
                 .thenReturn(sampleMessage)
                 .thenReturn(storedMessage);
-        Mockito.when(dao.getProcessingId()).thenReturn((short)VALID_TO_SEND_INDEX);
+        when(dao.getProcessingId()).thenReturn((short)VALID_TO_SEND_INDEX);
         short nextDeliveryId = VALID_TO_SEND_INDEX + 1;
-        Mockito.when(dao.incrementProcessingId(anyShort())).thenReturn(nextDeliveryId);
+        when(dao.incrementProcessingId(anyShort())).thenReturn(nextDeliveryId);
 
         //when
         service.processMessage();
@@ -114,7 +115,8 @@ public class ServiceTest {
 
         verify(messageBroker).poll(RAW_TOPIC, SAMPLE_DURATION);
         verify(messageBroker).publish(ORDERED_TOPIC, sampleMessage);
-        verify(messageBroker).acknowledge(RAW_TOPIC, sampleMessage.getPartition(), sampleMessage.getOffset());
+        verify(messageBroker)
+                .acknowledge(RAW_TOPIC, sampleMessage.getPartition(), sampleMessage.getOffset());
     }
 
     @Test
@@ -124,12 +126,12 @@ public class ServiceTest {
                 buildSampleMessage(1),
                 buildSampleMessage(2),
                 buildSampleMessage(3));
-        Mockito.when(messageBroker.poll(Mockito.anyString(), eq(SAMPLE_DURATION)))
+        when(messageBroker.poll(Mockito.anyString(), eq(SAMPLE_DURATION)))
                 .thenReturn(messages.get(0))
                 .thenReturn(messages.get(1))
                 .thenReturn(messages.get(2));
 
-        Mockito.when(dao.getProcessingId())
+        when(dao.getProcessingId())
                 .thenReturn((short) VALID_TO_SEND_INDEX)
                 .thenReturn((short) 2)
                 .thenReturn((short) 3);
