@@ -11,4 +11,8 @@ class NonProcessedException extends IOException {
     NonProcessedException(Throwable cause) {
         super(cause);
     }
+
+    NonProcessedException(String message) {
+        super(message);
+    }
 }

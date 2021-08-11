@@ -2,9 +2,11 @@ package com.sample.app.service;
 
 
 import static com.sample.app.config.Constants.NON_PROCESSED_TOPIC;
+import static com.sample.app.config.Constants.NON_VALID_MESSAGE;
 import static com.sample.app.config.Constants.ORDERED_TOPIC;
 import static com.sample.app.config.Constants.RAW_TOPIC;
 import static com.sample.app.config.Constants.SAMPLE_DURATION;
+import static com.sample.app.config.Validator.validateMessage;
 
 import com.sample.app.broker.Message;
 import com.sample.app.broker.MessageBroker;
@@ -34,6 +36,11 @@ public class ServiceImpl implements Service {
         Message message = null;
         try {
             message = broker.poll(RAW_TOPIC, DURATION);
+            if (!validateMessage(message)) {
+                throw new NonProcessedException(String.format(
+                        NON_VALID_MESSAGE,message.getDeliveryId(), RAW_TOPIC
+                ));
+            }
             log.info("got message, delivery id: {}", message.getDeliveryId());
             short processingId = dao.getProcessingId();
             if (processingId == message.getDeliveryId()) {
