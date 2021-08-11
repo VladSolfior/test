@@ -9,7 +9,7 @@ public interface Dao {
 
     short incrementProcessingId(short id);
 
-    boolean writeMessage(Message message);
+    void writeMessage(Message message);
 
     Message getMessageByProcessingId(short updatedId);
 }

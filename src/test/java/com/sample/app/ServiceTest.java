@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 import org.junit.After;
 import org.junit.Test;
@@ -36,6 +37,8 @@ public class ServiceTest {
 
     private static final Duration SAMPLE_DURATION = Duration.ofMillis(100);
     private static final int VALID_TO_SEND_INDEX = 1;
+    private static final String SAMPLE_BODY_DATA = "sample data";
+    private static final String SAMPLE_ID = UUID.randomUUID().toString();
 
     @Mock
     private Dao dao;
@@ -62,6 +65,7 @@ public class ServiceTest {
         //then
         verify(dao).getProcessingId();
         verify(messageBroker).poll(RAW_TOPIC, SAMPLE_DURATION);
+        verify(messageBroker).acknowledge(RAW_TOPIC, sampleMessage.getPartition(), sampleMessage.getOffset());
         verify(dao).writeMessage(sampleMessage);
     }
 
@@ -161,6 +165,6 @@ public class ServiceTest {
 
     private static Message buildSampleMessage(int deliveryId) {
         short id = (short) deliveryId;
-        return new Message(1, 2L, "", id, "Test");
+        return new Message(1, 2L, SAMPLE_ID, id, SAMPLE_BODY_DATA);
     }
 }

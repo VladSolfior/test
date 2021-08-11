@@ -4,6 +4,7 @@ package com.sample.app.service;
 import static com.sample.app.config.Constants.NON_PROCESSED_TOPIC;
 import static com.sample.app.config.Constants.ORDERED_TOPIC;
 import static com.sample.app.config.Constants.RAW_TOPIC;
+import static com.sample.app.config.Constants.SAMPLE_DURATION;
 
 import com.sample.app.broker.Message;
 import com.sample.app.broker.MessageBroker;
@@ -17,9 +18,8 @@ import org.slf4j.LoggerFactory;
 
 public class ServiceImpl implements Service {
 
-    private static final Duration DURATION = Duration.ofMillis(100);
     private static Logger log = LoggerFactory.getLogger(ServiceImpl.class.getName());
-
+    private static final Duration DURATION = Duration.ofMillis(SAMPLE_DURATION);
 
     private Dao dao;
     private MessageBroker broker;
@@ -58,8 +58,7 @@ public class ServiceImpl implements Service {
                         "non processed message: {}, cause: {}",
                         message.getDeliveryId(),
                         e.getMessage() + " " + e.getCause());
-                if (e.getClass().equals(IOException.class)) {
-                    log.error("");
+                if (e.getClass().equals(NonProcessedException.class)) {
                     publish(NON_PROCESSED_TOPIC, message);
                 }
             } else {
@@ -73,6 +72,10 @@ public class ServiceImpl implements Service {
         try {
             broker.publish(topicName, message);
         } catch (IOException e) {
+            log.error(
+                    "Cannot process message with id: {}, topic to write: {}",
+                    message.getDeliveryId(),
+                    topicName);
             throw new NonProcessedException(e);
         }
     }

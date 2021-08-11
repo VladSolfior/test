@@ -33,8 +33,7 @@ public class DaoImpl implements Dao {
     }
 
     @Override
-    public boolean writeMessage(Message message) {
-        return false;
+    public void writeMessage(Message message) {
     }
 
     @Override
