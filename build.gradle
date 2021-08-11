@@ -1,0 +1,26 @@
+plugins {
+    id 'java'
+}
+
+group 'task.broker.process'
+version '1.0-SNAPSHOT'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        url 'http://dynamodb-local.s3-website-us-west-2.amazonaws.com/release'
+    }
+}
+
+dependencies {
+    testImplementation group: 'junit', name: 'junit', version: '4.12'
+    testImplementation group: 'org.mockito', name: 'mockito-core', version: '3.11.2'
+    testImplementation group: 'org.slf4j', name: 'slf4j-simple', version: '1.6.1'
+    implementation group: 'org.slf4j', name: 'slf4j-simple', version: '1.6.1'
+    testCompile group: 'com.amazonaws', name: 'DynamoDBLocal', version: '1.13.0'
+}
