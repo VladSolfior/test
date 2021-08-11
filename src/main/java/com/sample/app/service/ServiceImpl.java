@@ -1,6 +1,7 @@
 package com.sample.app.service;
 
 
+import static com.sample.app.config.Constants.NON_PROCESSED_TOPIC;
 import static com.sample.app.config.Constants.ORDERED_TOPIC;
 import static com.sample.app.config.Constants.RAW_TOPIC;
 
@@ -29,38 +30,55 @@ public class ServiceImpl implements Service {
     }
 
     @Override
-    public void processMessage() throws IOException {
-        Message message = broker.poll(RAW_TOPIC, DURATION);
-        log.info("got message, delivery id: {}", message.getDeliveryId());
-        short processingId = dao.getProcessingId();
-        boolean processed = false;
+    public void processMessage() throws NonProcessedException {
+        Message message = null;
         try {
+            message = broker.poll(RAW_TOPIC, DURATION);
+            log.info("got message, delivery id: {}", message.getDeliveryId());
+            short processingId = dao.getProcessingId();
             if (processingId == message.getDeliveryId()) {
-                broker.publish(ORDERED_TOPIC, message);
+                publish(ORDERED_TOPIC, message);
+                acknowledge(message);
                 short updatedId = dao.incrementProcessingId(processingId);
-                processed = true;
                 Message storedMessage = dao.getMessageByProcessingId(updatedId);
 
                 while (storedMessage != null) {
-                    processed = false;
-                    broker.publish(ORDERED_TOPIC, storedMessage);
+                    publish(ORDERED_TOPIC, storedMessage);
+                    acknowledge(message);
                     updatedId = dao.incrementProcessingId(processingId);
-                    processed = true;
                     storedMessage = dao.getMessageByProcessingId(updatedId);
                 }
-
             } else {
-                processed = dao.writeMessage(message);
+                dao.writeMessage(message);
+                acknowledge(message);
             }
         } catch (Exception e) {
-            log.error(
-                    "non processed message: {}, cause: {}",
-                    message.getDeliveryId(),
-                    e.getMessage() + " " + e.getCause());
+            if (message != null) {
+                log.error(
+                        "non processed message: {}, cause: {}",
+                        message.getDeliveryId(),
+                        e.getMessage() + " " + e.getCause());
+                if (e.getClass().equals(IOException.class)) {
+                    log.error("");
+                    publish(NON_PROCESSED_TOPIC, message);
+                }
+            } else {
+                log.error("Cannot retrieve messages from broker");
+                throw new NonProcessedException("Cannot retrieve messages from broker", e);
+            }
         }
-        if (processed) {
-            broker.acknowledge(RAW_TOPIC,message.getPartition(),message.getOffset());
-            log.info("Acknowledgment sent, message id: {}", message.getDeliveryId());
+    }
+
+    private void publish(String topicName, Message message) throws NonProcessedException {
+        try {
+            broker.publish(topicName, message);
+        } catch (IOException e) {
+            throw new NonProcessedException(e);
         }
+    }
+
+    private void acknowledge(Message message) throws IOException {
+        broker.acknowledge(RAW_TOPIC, message.getPartition(), message.getOffset());
+        log.info("Acknowledgment sent, message id: {}", message.getDeliveryId());
     }
 }
