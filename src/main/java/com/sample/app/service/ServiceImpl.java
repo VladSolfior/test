@@ -10,6 +10,7 @@ import static com.sample.app.config.Validator.validateMessage;
 
 import com.sample.app.broker.Message;
 import com.sample.app.broker.MessageBroker;
+import com.sample.app.config.exceptions.NonProcessedException;
 import com.sample.app.dao.Dao;
 
 import java.io.IOException;
