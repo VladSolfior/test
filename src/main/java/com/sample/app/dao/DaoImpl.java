@@ -34,6 +34,7 @@ public class DaoImpl implements Dao {
 
     @Override
     public void writeMessage(Message message) {
+    	//tmp to do write implementation
     }
 
     @Override
